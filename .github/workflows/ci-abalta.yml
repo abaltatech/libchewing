@@ -1,0 +1,58 @@
+name: Build xcframework
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches:
+      - "master"
+      - "release/*"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: actions-setup-cmake
+        uses: jwlawson/actions-setup-cmake@v1.13.1
+        with:
+          cmake-version: 4.0.x
+
+      - name: Checkout libchewing
+        uses: actions/checkout@v4
+        with:
+          repository: abaltatech/libchewing
+          path: libchewing
+
+      - name: Checkout ios-cmake
+        uses: actions/checkout@v4
+        with:
+          repository: leetal/ios-cmake
+          path: ios-cmake
+
+      - name: Setup rust
+        shell: bash
+        run: |
+          rustup target add aarch64-apple-ios
+          rustup target add --toolchain stable-aarch64-apple-darwin aarch64-apple-ios-sim
+          rustup target add --toolchain stable-aarch64-apple-darwin x86_64-apple-ios
+
+      - name: Test
+        shell: bash
+        run: |
+         javac -version
+         /usr/libexec/java_home
+         ls -al /Users/runner/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.7-6.0/arm64/Contents/Home/include
+         ls -al /Users/runner/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.7-6.0/arm64/Contents/Home/include/darwin
+         export JAVA_HOME="$JAVA_HOME_17_arm64"
+         ls -al $JAVA_HOME_17_arm64
+
+      - name: Run cmake
+        shell: bash
+        working-directory: libchewing/swift
+        run: |
+          mkdir -p cmake-build && cd cmake-build
+          cmake .. -DTOOLCHAIN_FILE=${{ github.workspace }}/ios-cmake/ios.toolchain.cmake  -DCMAKE_CXX_FLAGS="-I$JAVA_HOME_17_arm64/include/  -I$JAVA_HOME_17_arm64/include/darwin"
+          cmake --build .
