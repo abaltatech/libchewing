@@ -25,7 +25,8 @@ static char* strdup_from_jstring(JNIEnv* env, jstring js) {
 // C‐callbacks that forward into Java:
 static void jni_onPreedit(const char* txt) {
     JNIEnv* env = nullptr;
-    g_vm->AttachCurrentThread(&env, nullptr);
+    // g_vm->AttachCurrentThread(&env, nullptr);
+    g_vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
     jstring js = env->NewStringUTF(txt ? txt : "");
     env->CallVoidMethod(g_listener, g_midOnPreedit, js);
     env->DeleteLocalRef(js);
@@ -33,7 +34,8 @@ static void jni_onPreedit(const char* txt) {
 
 static void jni_onBuffer(const char* txt) {
     JNIEnv* env = nullptr;
-    g_vm->AttachCurrentThread(&env, nullptr);
+    // g_vm->AttachCurrentThread(&env, nullptr);
+    g_vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
     jstring js = env->NewStringUTF(txt ? txt : "");
     env->CallVoidMethod(g_listener, g_midOnBuffer, js);
     env->DeleteLocalRef(js);
@@ -41,7 +43,8 @@ static void jni_onBuffer(const char* txt) {
 
 static void jni_onCommit(const char* txt) {
     JNIEnv* env = nullptr;
-    g_vm->AttachCurrentThread(&env, nullptr);
+    // g_vm->AttachCurrentThread(&env, nullptr);
+    g_vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
     jstring js = env->NewStringUTF(txt ? txt : "");
     env->CallVoidMethod(g_listener, g_midOnCommit, js);
     env->DeleteLocalRef(js);
@@ -51,7 +54,8 @@ static void jni_onCandidates(int pageSize, int numPages,
                              int candidateOnPage, int totalChoices,
                              const char** candidates) {
     JNIEnv* env = nullptr;
-    g_vm->AttachCurrentThread(&env, nullptr);
+    // g_vm->AttachCurrentThread(&env, nullptr);
+    g_vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
 
     // build Java String[]
     jclass strCls = env->FindClass("java/lang/String");

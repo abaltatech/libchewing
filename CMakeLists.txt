@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.24.0)
 project(libchewing LANGUAGES C CXX)
 
+include_directories(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
