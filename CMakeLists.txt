@@ -192,6 +192,7 @@ endif()
 set(ALL_SOURCES
     capi/src/chewing.c
     capi/src/chewing-simplified.cpp
+    capi/src/chewingJNI.cpp
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})
