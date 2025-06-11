@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.24.0)
 project(libchewing LANGUAGES C CXX)
 
-include_directories(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -190,11 +188,13 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
+option(ENABLE_JNI "Enable JNI support" OFF)
+
 # C and C++sources
 set(ALL_SOURCES
     capi/src/chewing.c
     capi/src/chewing-simplified.cpp
-    capi/src/chewingJNI.cpp
+    $<$<BOOL:${ENABLE_JNI}>:capi/src/chewingJNI.cpp>
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})

@@ -5,21 +5,6 @@ project(LibChewingSwiftPackage NONE)
 
 include(ExternalProject)
 
-# Ensure JAVA_HOME is defined
-if(NOT DEFINED ENV{JAVA_HOME})
-    message(FATAL_ERROR "JAVA_HOME is not set. Please export JAVA_HOME.")
-endif()
-
-# Set JNI include paths manually using JAVA_HOME
-set(JAVA_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
-set(JAVA_INCLUDE_PATH2 "$ENV{JAVA_HOME}/include/darwin") # Use 'linux' or 'win32' on other platforms
-
-include_directories(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
-
-message(STATUS "JNI include paths set to:")
-message(STATUS " - ${JAVA_INCLUDE_PATH}")
-message(STATUS " - ${JAVA_INCLUDE_PATH2}")
-
 #
 # 1) Allow the user to override TOOLCHAIN_FILE (or fall back to a default path).
 #
@@ -65,9 +50,6 @@ ExternalProject_Add(libchewing_ios
     BINARY_DIR "${BUILD_IOS_DIR}"
     CMAKE_ARGS
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}
-    -DJAVA_HOME=$ENV{JAVA_HOME}
-    -DJAVA_INCLUDE_PATH=$ENV{JAVA_HOME}/include
-    -DJAVA_INCLUDE_PATH2=$ENV{JAVA_HOME}/include/darwin
     -DPLATFORM=OS64
     -DDEPLOYMENT_TARGET=${DEPLOYMENT_TARGET}
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
@@ -83,9 +65,6 @@ ExternalProject_Add(libchewing_sim_arm
     BINARY_DIR "${BUILD_SIM_ARM}"
     CMAKE_ARGS
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}
-    -DJAVA_HOME=$ENV{JAVA_HOME}
-    -DJAVA_INCLUDE_PATH=$ENV{JAVA_HOME}/include
-    -DJAVA_INCLUDE_PATH2=$ENV{JAVA_HOME}/include/darwin
     -DPLATFORM=SIMULATORARM64
     -DDEPLOYMENT_TARGET=${DEPLOYMENT_TARGET}
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
@@ -101,9 +80,6 @@ ExternalProject_Add(libchewing_sim_x86
     BINARY_DIR "${BUILD_SIM_X86}"
     CMAKE_ARGS
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}
-    -DJAVA_HOME=$ENV{JAVA_HOME}
-    -DJAVA_INCLUDE_PATH=$ENV{JAVA_HOME}/include
-    -DJAVA_INCLUDE_PATH2=$ENV{JAVA_HOME}/include/darwin
     -DPLATFORM=SIMULATOR64
     -DDEPLOYMENT_TARGET=${DEPLOYMENT_TARGET}
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
