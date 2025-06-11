@@ -65,10 +65,14 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: libchewing.xcframework
-
+        - name: Test
+          shell: bash
+          run: |
+           ls -al
+           ls -al libchewing.xcframework*
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
-           files: libchewing.xcframework
-           tag_name: ${{ github.ref_name }}
+           files: libchewing.xcframework.zip
+           tag_name: ${{ github.ref }}
 
