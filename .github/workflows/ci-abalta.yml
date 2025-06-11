@@ -47,11 +47,16 @@ jobs:
           cmake .. -DTOOLCHAIN_FILE=${{ github.workspace }}/ios-cmake/ios.toolchain.cmake
           cmake --build .
 
+      - name: Zip artifact
+        shell: bash
+        working-directory: libchewing/swift/chewing-simplified
+        run: zip -r libchewing.xcframework.zip libchewing.xcframework
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libchewing.xcframework
-          path: libchewing/swift/chewing-simplified/libchewing.xcframework
+          name: libchewing.xcframework.zip
+          path: libchewing/swift/chewing-simplified/libchewing.xcframework.zip
           if-no-files-found: error
 
   release:
@@ -65,8 +70,8 @@ jobs:
         - name: Download artifact
           uses: actions/download-artifact@v4
           with:
-            name: libchewing.xcframework
-            path: libchewing.xcframework.zip
+            name: libchewing.xcframework.zip
+            path: .
 
         - name: Test
           shell: bash
@@ -84,18 +89,23 @@ jobs:
             sed -i "s/let version = \".*\"/let version = \"${{ steps.get_version.outputs.VERSION }}\"/" swift/chewing-simplified/Package.swift
             sed -i "s/let checksum = \".*\"/let checksum = \"$(shasum -a 256 libchewing.xcframework.zip | cut -d ' ' -f 1)\"/" swift/chewing-simplified/Package.swift
 
-        - name: Commit and push
-          run: |
-            git config --local user.email "abalta-github-build@abaltatech.com"
-            git config --local user.name "abalta-github-build"
-            git add swift/chewing-simplified/Package.swift
-            git commit -m "Update Package.swift"
-            git status
-            git push
+        - name: Set target branch name
+          shell: bash
+          id: set_target_branch
+          run: echo "TARGET_BRANCH=${{ github.head_ref || github.ref_name }}" >> $GITHUB_OUTPUT
 
-        #- name: Release
-        #  uses: softprops/action-gh-release@v2
-        #  with:
-        #   files: libchewing.xcframework.zip
-        #   tag_name: ${{ github.ref }}
+        #- name: Commit and push
+        #  run: |
+        #    git config --local user.email "abalta-github-build@abaltatech.com"
+        #    git config --local user.name "abalta-github-build"
+        #    git add swift/chewing-simplified/Package.swift
+        #    git commit -m "Update Package.swift"
+        #    #git push origin ${{ steps.set_target_branch.outputs.TARGET_BRANCH }}
+        #    git push origin HEAD:${{ github.head_ref || github.ref_name }}
+
+        - name: Release
+          uses: softprops/action-gh-release@v2
+          with:
+           files: ${{ github.workspace }}/libchewing.xcframework.zip
+           tag_name: ${{ steps.get_version.outputs.VERSION }}
 
