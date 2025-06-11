@@ -57,6 +57,7 @@ jobs:
   release:
       needs: build-xcframework
       runs-on: ubuntu-latest
+
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -65,14 +66,36 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: libchewing.xcframework
+            path: libchewing.xcframework.zip
+
         - name: Test
           shell: bash
           run: |
-           ls -al
-           ls -al libchewing.xcframework*
-        - name: Release
-          uses: softprops/action-gh-release@v2
-          with:
-           files: libchewing.xcframework.zip
-           tag_name: ${{ github.ref }}
+           ls -R
+
+        - name: Get version
+          shell: bash
+          working-directory: swift/chewing-simplified
+          id: get_version
+          run: echo "VERSION=$(cat .version)" >> $GITHUB_OUTPUT
+
+        - name: Update Package.swift
+          run: |
+            sed -i "s/let version = \".*\"/let version = \"${{ steps.get_version.outputs.VERSION }}\"/" swift/chewing-simplified/Package.swift
+            sed -i "s/let checksum = \".*\"/let checksum = \"$(shasum -a 256 libchewing.xcframework.zip | cut -d ' ' -f 1)\"/" swift/chewing-simplified/Package.swift
+
+        - name: Commit and push
+          run: |
+            git config --local user.email "abalta-github-build@abaltatech.com"
+            git config --local user.name "abalta-github-build"
+            git add swift/chewing-simplified/Package.swift
+            git commit -m "Update Package.swift"
+            git status
+            git push
+
+        #- name: Release
+        #  uses: softprops/action-gh-release@v2
+        #  with:
+        #   files: libchewing.xcframework.zip
+        #   tag_name: ${{ github.ref }}
 
