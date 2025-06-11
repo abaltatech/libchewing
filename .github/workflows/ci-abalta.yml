@@ -53,3 +53,22 @@ jobs:
           name: libchewing.xcframework
           path: libchewing/swift/chewing-simplified/libchewing.xcframework
           if-no-files-found: error
+
+  release:
+      needs: build-xcframework
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Download artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: libchewing.xcframework
+
+        - name: Release
+          uses: softprops/action-gh-release@v2
+          with:
+           files: libchewing.xcframework
+           tag_name: ${{ github.ref_name }}
+
