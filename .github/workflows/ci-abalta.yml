@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-xcframework:
     runs-on: macos-latest
 
     steps:
@@ -39,20 +39,17 @@ jobs:
           rustup target add --toolchain stable-aarch64-apple-darwin aarch64-apple-ios-sim
           rustup target add --toolchain stable-aarch64-apple-darwin x86_64-apple-ios
 
-      - name: Test
-        shell: bash
-        run: |
-         javac -version
-         /usr/libexec/java_home
-         ls -al /Users/runner/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.7-6.0/arm64/Contents/Home/include
-         ls -al /Users/runner/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.7-6.0/arm64/Contents/Home/include/darwin
-         export JAVA_HOME="$JAVA_HOME_17_arm64"
-         ls -al $JAVA_HOME_17_arm64
-
-      - name: Run cmake
+      - name: Build libchewing xcframework
         shell: bash
         working-directory: libchewing/swift
         run: |
           mkdir -p cmake-build && cd cmake-build
-          cmake .. -DTOOLCHAIN_FILE=${{ github.workspace }}/ios-cmake/ios.toolchain.cmake  -DCMAKE_CXX_FLAGS="-I$JAVA_HOME_17_arm64/include/  -I$JAVA_HOME_17_arm64/include/darwin"
+          cmake .. -DTOOLCHAIN_FILE=${{ github.workspace }}/ios-cmake/ios.toolchain.cmake
           cmake --build .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libchewing.xcframework
+          path: libchewing/swift/chewing-simplified/libchewing.xcframework
+          if-no-files-found: error
