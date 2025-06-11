@@ -3,6 +3,8 @@ name: Build xcframework
 on:
   push:
     branches: [ "master" ]
+    paths-ignore:
+      - swift/chewing-simplified/Package.swift
   pull_request:
     branches:
       - "master"
@@ -60,6 +62,7 @@ jobs:
           if-no-files-found: error
 
   release:
+      if: ${{ github.ref == 'refs/heads/master' }}
       needs: build-xcframework
       runs-on: ubuntu-latest
 
@@ -73,11 +76,6 @@ jobs:
             name: libchewing.xcframework.zip
             path: .
 
-        - name: Test
-          shell: bash
-          run: |
-           ls -R
-
         - name: Get version
           shell: bash
           working-directory: swift/chewing-simplified
@@ -89,23 +87,16 @@ jobs:
             sed -i "s/let version = \".*\"/let version = \"${{ steps.get_version.outputs.VERSION }}\"/" swift/chewing-simplified/Package.swift
             sed -i "s/let checksum = \".*\"/let checksum = \"$(shasum -a 256 libchewing.xcframework.zip | cut -d ' ' -f 1)\"/" swift/chewing-simplified/Package.swift
 
-        - name: Set target branch name
-          shell: bash
-          id: set_target_branch
-          run: echo "TARGET_BRANCH=${{ github.head_ref || github.ref_name }}" >> $GITHUB_OUTPUT
-
-        #- name: Commit and push
-        #  run: |
-        #    git config --local user.email "abalta-github-build@abaltatech.com"
-        #    git config --local user.name "abalta-github-build"
-        #    git add swift/chewing-simplified/Package.swift
-        #    git commit -m "Update Package.swift"
-        #    #git push origin ${{ steps.set_target_branch.outputs.TARGET_BRANCH }}
-        #    git push origin HEAD:${{ github.head_ref || github.ref_name }}
+        - name: Commit and push
+          run: |
+            git config --local user.email "abalta-github-build@abaltatech.com"
+            git config --local user.name "abalta-github-build"
+            git add swift/chewing-simplified/Package.swift
+            git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update Package.swift"
+            git push origin master
 
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
            files: ${{ github.workspace }}/libchewing.xcframework.zip
            tag_name: ${{ steps.get_version.outputs.VERSION }}
-
