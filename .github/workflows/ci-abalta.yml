@@ -2,9 +2,10 @@ name: Build xcframework
 
 on:
   push:
-    branches: [ "master" ]
-    paths-ignore:
-      - swift/chewing-simplified/Package.swift
+    branches:
+    - master
+    paths:
+      - swift/chewing-simplified/.version
   pull_request:
     branches:
       - "master"
