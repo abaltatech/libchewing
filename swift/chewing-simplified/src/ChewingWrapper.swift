@@ -44,7 +44,7 @@ public class ChewingWrapper {
     /// its SwiftPM `resources:` configuration. This path is used when
     /// initializing the Chewing context.
     public static var dataDirectoryPath: String? {
-        return Bundle.module.resourcePath?.appending("/data")
+        return Bundle.module.resourcePath
     }
 
     /// Initializes a new ChewingWrapper instance.
