@@ -229,6 +229,10 @@ bool cs_init(const cs_context_t *ctx)
     if (data_path == nullptr) {
         return false;
     }
+    const char *user_path = ctx->config.user_path;
+    if (user_path == nullptr) {
+        user_path = data_path; // Use data path if user path is not provided
+    }
 
     if (s_context != nullptr) {
         cs_terminate();
@@ -236,7 +240,7 @@ bool cs_init(const cs_context_t *ctx)
 
     s_callbacks = CallbacksWrapper(ctx->callbacks);
 
-    s_context = chewing_new2(data_path, nullptr, cs_logger_shim, nullptr);
+    s_context = chewing_new2(data_path, user_path, cs_logger_shim, nullptr);
     if (s_context == nullptr) {
         s_callbacks.log(CHEWING_LOG_ERROR,
                         "chewing_new2 failed to initialize context");

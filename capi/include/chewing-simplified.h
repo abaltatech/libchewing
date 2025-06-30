@@ -59,11 +59,13 @@ typedef void (*cs_logger_callback_t)(const int level, const char *message);
 
 /** @brief Configuration for CS integration.
  *  @param data_path Filesystem path to chewing data files.
+ *  @param user_path Filesystem path for chewing to use.
  *  @param cand_per_page Number of candidates to fetch per page.
  *  @param max_chi_symbol_len Maximum length of a Chinese symbol sequence.
  */
 typedef struct cs_config_s {
     char *data_path;
+    char *user_path;
     int cand_per_page;
     int max_chi_symbol_len;
 } cs_config_t;

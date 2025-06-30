@@ -44,7 +44,7 @@ public class ChewingWrapper {
     /// its SwiftPM `resources:` configuration. This path is used when
     /// initializing the Chewing context.
     public static var dataDirectoryPath: String? {
-        return Bundle.module.resourcePath
+        return Bundle.module.resourcePath?.appending("/data")
     }
 
     /// Initializes a new ChewingWrapper instance.
@@ -61,6 +61,7 @@ public class ChewingWrapper {
     public required init(candPerPage: Int = 10,
                          maxChiSymbolLen: Int = 18,
                          dataDirectoryPath: String? = nil,
+                         userDirectoryPath: String? = nil,
                          loggingConfig: LoggingConfig) throws
     {
         // Initialize the internal logger to route Chewing logs
@@ -71,8 +72,11 @@ public class ChewingWrapper {
             throw ChewingWrapperError.notFound
         }
 
+        let userDirectoryPath = userDirectoryPath ?? dataDirectoryPath
+
         let config = cs_config_t(
             data_path: strdup(dataDirectoryPath),
+            user_path: strdup(userDirectoryPath),
             cand_per_page: Int32(candPerPage),
             max_chi_symbol_len: Int32(maxChiSymbolLen)
         )
