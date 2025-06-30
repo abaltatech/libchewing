@@ -31,10 +31,10 @@ public class ChewingWrapper {
     /// Closure invoked when the Chewing engine commits text to the application.
     /// - Parameter committedText: The string that was committed.
     public var onCommit: ((String) -> Void)?
-    /// Closure invoked when the Chewing engine’s composed buffer is updated.
+    /// Closure invoked when the Chewing engine's composed buffer is updated.
     /// - Parameter bufferText: The current content of the composition buffer.
     public var onBufferUpdate: ((String) -> Void)?
-    /// Closure invoked when the Chewing engine’s preedit (in-progress composition) text changes.
+    /// Closure invoked when the Chewing engine's preedit (in-progress composition) text changes.
     /// - Parameter preeditText: The current preedit text.
     public var onPreeditUpdate: ((String) -> Void)?
 
@@ -161,42 +161,45 @@ private extension ChewingWrapper {
     ///   - total: Total number of candidates available.
     ///   - items: C array of C strings representing candidate words.
     private static let candidateInfoHandler: @convention(c) (Int32, Int32, Int32, Int32, UnsafeMutablePointer<UnsafePointer<CChar>?>?) -> Void = { _, _, _, total, items in
-        guard let wrapper = ChewingWrapper.currentWrapper else { return }
-        var candidates: [String] = []
-        if let items = items {
-            for i in 0 ..< Int(total) {
-                if let cStrPtr = items[i] {
-                    candidates.append(String(cString: cStrPtr))
-                }
-            }
+        guard let callback = ChewingWrapper.currentWrapper?.onCandidateUpdate,
+              let items = items else { return }
+
+        let buffer = UnsafeBufferPointer(start: items, count: Int(total))
+        let candidates = buffer.compactMap { ptr -> String? in
+            guard let cStrPtr = ptr else { return nil }
+            return String(cString: cStrPtr, encoding: .utf8)
         }
-        wrapper.onCandidateUpdate?(candidates)
+
+        callback(candidates)
     }
 
-    /// C callback invoked when the Chewing engine’s buffer (composed text) is updated.
+    /// C callback invoked when the Chewing engine's buffer (composed text) is updated.
     ///
     /// - Parameter buf: C string containing the current buffer content.
     private static let bufferHandler: @convention(c) (UnsafePointer<CChar>?) -> Void = { buf in
-        guard let wrapper = ChewingWrapper.currentWrapper, let buf else { return }
-        let str = String(cString: buf)
-        wrapper.onBufferUpdate?(str)
+        guard let callback = ChewingWrapper.currentWrapper?.onBufferUpdate,
+              let buf, let str = String(cString: buf, encoding: .utf8) else { return }
+
+        callback(str)
     }
 
-    /// C callback invoked when the Chewing engine’s preedit (in-progress composition) is updated.
+    /// C callback invoked when the Chewing engine's preedit (in-progress composition) is updated.
     ///
     /// - Parameter buf: C string containing the current preedit text.
     private static let preeditHandler: @convention(c) (UnsafePointer<CChar>?) -> Void = { buf in
-        guard let wrapper = ChewingWrapper.currentWrapper, let buf else { return }
-        let str = String(cString: buf)
-        wrapper.onPreeditUpdate?(str)
+        guard let callback = ChewingWrapper.currentWrapper?.onPreeditUpdate,
+              let buf, let str = String(cString: buf, encoding: .utf8) else { return }
+
+        callback(str)
     }
 
     /// C callback invoked when the Chewing engine commits text to the application.
     ///
     /// - Parameter buf: C string containing the committed text.
     private static let commitHandler: @convention(c) (UnsafePointer<CChar>?) -> Void = { buf in
-        guard let wrapper = ChewingWrapper.currentWrapper, let buf else { return }
-        let str = String(cString: buf)
-        wrapper.onCommit?(str)
+        guard let callback = ChewingWrapper.currentWrapper?.onCommit,
+              let buf, let str = String(cString: buf, encoding: .utf8) else { return }
+
+        callback(str)
     }
 }
