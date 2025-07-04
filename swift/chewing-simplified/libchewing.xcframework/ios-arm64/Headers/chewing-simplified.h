@@ -72,8 +72,8 @@ typedef void (*cs_logger_callback_t)(const int level, const char *message);
  *  @param max_chi_symbol_len Maximum length of a Chinese symbol sequence.
  */
 typedef struct cs_config_s {
-    char *data_path;
-    char *user_path;
+    const char *data_path;
+    const char *user_path;
     int cand_per_page;
     int max_chi_symbol_len;
 } cs_config_t;
