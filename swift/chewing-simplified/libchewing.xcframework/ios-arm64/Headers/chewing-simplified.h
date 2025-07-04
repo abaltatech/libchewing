@@ -15,6 +15,14 @@
 extern "C" {
 #endif
 
+/** @brief Success return code (from Rust). */
+__attribute__((visibility("default")))
+extern const int CHEWING_OK;
+
+/** @brief Error return code (from Rust). */
+__attribute__((visibility("default")))
+extern const int CHEWING_ERROR;
+
 static const char CHEWING_KEY_Enter = 10;      // Enter key
 static const char CHEWING_KEY_Space = ' ';     // Space key
 static const char CHEWING_KEY_Backspace = 127; // Backspace key
@@ -79,7 +87,7 @@ typedef struct cs_callbacks_s {
     cs_logger_callback_t logger;
 } cs_callbacks_t;
 
-/** @brief Context object holding CS configuration and callbacks. */
+/** @brief Context object holding CS configura tion and callbacks. */
 typedef struct cs_context_s {
     cs_config_t config;
     cs_callbacks_t callbacks;
@@ -98,17 +106,19 @@ bool cs_init(const cs_context_t *ctx);
 __attribute__((visibility("default")))
 bool cs_terminate(void);
 
-/** @brief Process a single key input through CS.
- *  @param key Input key character.
+/**
+ * @brief Process a single key input through CS and updates state.
+ * @param key Input key character.
+ * @return true if processing succeeded, false otherwise.
  */
 __attribute__((visibility("default")))
-void cs_process_key(const char key);
+bool cs_process_key(const char key);
 
 /** @brief Select a candidate from the current list.
  *  @param index Zero-based index of the candidate to select.
  */
 __attribute__((visibility("default")))
-void cs_select_candidate(const int index);
+bool cs_select_candidate(const int index);
 
 #ifdef __cplusplus
 }

@@ -77,7 +77,7 @@ package struct ChewingLogger {
             case .info:
                 ChewingLogger.osLoggerQueue.async { ChewingLogger.osLogger.info("\(message)") }
             case .debug,
-                    .verbose:
+                 .verbose:
                 ChewingLogger.osLoggerQueue.async { ChewingLogger.osLogger.debug("\(message)") }
             default:
                 ChewingLogger.osLoggerQueue.async { ChewingLogger.osLogger.notice("Unknown log level: \(level), \(message)") }

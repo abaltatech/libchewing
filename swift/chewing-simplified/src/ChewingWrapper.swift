@@ -109,25 +109,29 @@ public class ChewingWrapper {
         }
     }
 
-    /// Sends a single key input to the Chewing engine.
-    ///
-    /// - Parameter key: A `Character` representing a keystroke (e.g., a letter, space, backspace, or enter).
-    ///                  This is converted to a C `char` and forwarded to `cs_process_key`.
-    public func process(key: Character) {
-        guard isInitialized else { return }
-        guard let cKey = key.asciiValue else { return }
+    /**
+     * Sends a single key input to the Chewing engine and updates state.
+     * - Parameter key: A `Character` representing a keystroke (e.g., a letter, space, backspace, or enter).
+     * - Returns: `true` if processing succeeded, `false` otherwise.
+     */
+    @discardableResult
+    public func process(key: Character) -> Bool {
+        guard isInitialized else { return false }
+        guard let cKey = key.asciiValue else { return false }
 
-        cs_process_key(CChar(cKey))
+        return cs_process_key(CChar(cKey))
     }
 
-    /// Selects a candidate word by its index in the current candidate list.
-    ///
-    /// - Parameter index: Zero-based index of the candidate to commit.
-    ///                    The Chewing engine will commit that candidate to the buffer.
-    public func selectCandidate(at index: Int) {
-        guard isInitialized else { return }
+    /**
+     * Selects a candidate word by its index and commits it.
+     * - Parameter index: Zero-based index of the candidate to commit.
+     * - Returns: `true` if selection succeeded, `false` otherwise.
+     */
+    @discardableResult
+    public func selectCandidate(at index: Int) -> Bool {
+        guard isInitialized else { return false }
 
-        cs_select_candidate(Int32(index))
+        return cs_select_candidate(Int32(index))
     }
 
     private var ctx: cs_context_s = .init()
@@ -136,14 +140,16 @@ public class ChewingWrapper {
 }
 
 public extension ChewingWrapper {
-    /// Sends a key input to the Chewing engine using a `ChewingKey` enum value.
-    ///
-    /// - Parameter key: A `ChewingKey` value (e.g., `.enter`, `.space`, `.backspace`).
-    ///                  The underlying `CChar` is extracted and sent to `cs_process_key`.
-    func process(key: ChewingKey) {
-        guard isInitialized else { return }
+    /**
+     * Sends a key input using a `ChewingKey` enum value.
+     * - Parameter key: A `ChewingKey` value (e.g., `.enter`, `.space`, `.backspace`).
+     * - Returns: `true` if processing succeeded, `false` otherwise.
+     */
+    @discardableResult
+    func process(key: ChewingKey) -> Bool {
+        guard isInitialized else { return false }
 
-        cs_process_key(key.cValue)
+        return cs_process_key(key.cValue)
     }
 }
 
