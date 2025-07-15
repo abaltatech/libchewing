@@ -12,7 +12,7 @@ let package = Package(
     products: [
         .library(
             name: "Chewing",
-            type: .dynamic,
+            type: .static,
             targets: ["Chewing"]
         ),
     ],
