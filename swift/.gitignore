@@ -4,4 +4,5 @@ cmake-build/
 .swiftpm/
 # *.xcframework
 # *.dat
+*.doccarchive/
 xcuserdata/
