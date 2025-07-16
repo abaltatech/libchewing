@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- Unique bundle ID, match your framework folder name -->
+    <key>CFBundleIdentifier</key>
+    <string>com.abaltatech.libchewing</string>
+
+    <!-- Human-readable name -->
+    <key>CFBundleName</key>
+    <string>libchewing</string>
+
+    <!-- Must be 'FMWK' for frameworks -->
+    <key>CFBundlePackageType</key>
+    <string>FMWK</string>
+
+    <!-- The framework binary filename -->
+    <key>CFBundleExecutable</key>
+    <string>libchewing</string>
+
+    <!-- Marketing version (three-part) -->
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+
+    <!-- Internal build number -->
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <!-- Supported platform: only Device -->
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+      <string>iPhoneOS</string>
+    </array>
+  </dict>
+</plist>
