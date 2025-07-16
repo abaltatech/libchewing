@@ -1,0 +1,4 @@
+module CLibChewing {
+  header "chewing-simplified.h"
+  export *
+}

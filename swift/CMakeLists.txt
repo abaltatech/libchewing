@@ -107,19 +107,52 @@ add_custom_target(create_simulator_fat
     DEPENDS "${BUILD_SIM_FAT}/libchewing.dylib"
 )
 
+# Create device framework
+add_custom_command(
+    OUTPUT "${BUILD_IOS_DIR}/libchewing.framework/libchewing"
+    DEPENDS libchewing_ios
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Headers"
+    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_IOS_DIR}/libchewing.dylib" "${BUILD_IOS_DIR}/libchewing.framework/libchewing"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${LIBC_ROOT_DIR}/capi/include" "${BUILD_IOS_DIR}/libchewing.framework/Headers"
+    COMMENT "↪ Creating iOS framework at ${BUILD_IOS_DIR}/libchewing.framework"
+)
+add_custom_target(libchewing_framework_ios DEPENDS "${BUILD_IOS_DIR}/libchewing.framework/libchewing")
+
+# Create simulator framework
+add_custom_command(
+    OUTPUT "${BUILD_SIM_FAT}/libchewing.framework/libchewing"
+    DEPENDS create_simulator_fat
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Headers"
+    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_SIM_FAT}/libchewing.dylib" "${BUILD_SIM_FAT}/libchewing.framework/libchewing"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${LIBC_ROOT_DIR}/capi/include" "${BUILD_SIM_FAT}/libchewing.framework/Headers"
+    COMMENT "↪ Creating simulator framework at ${BUILD_SIM_FAT}/libchewing.framework"
+)
+add_custom_target(libchewing_framework_sim DEPENDS "${BUILD_SIM_FAT}/libchewing.framework/libchewing")
+
+
 # 6.1) Create the modulemap
-file(WRITE "${LIBC_ROOT_DIR}/capi/include/module.modulemap" "module CLibChewing {\n  header \"chewing-simplified.h\"\n  export *\n}\n")
+file(WRITE "${BUILD_BASE_DIR}/module.modulemap" "module CLibChewing {\n  header \"chewing-simplified.h\"\n  export *\n}\n")
+
+# Copy module.modulemap into framework Modules
+add_custom_command(TARGET libchewing_framework_ios POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Modules"
+    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_BASE_DIR}/module.modulemap" "${BUILD_IOS_DIR}/libchewing.framework/Modules/module.modulemap"
+)
+add_custom_command(TARGET libchewing_framework_sim POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Modules"
+    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_BASE_DIR}/module.modulemap" "${BUILD_SIM_FAT}/libchewing.framework/Modules/module.modulemap"
+)
 
 #
 # 6.2) Create the XCFramework once device + fat simulator are ready
 #
 add_custom_command(
     OUTPUT "${XCFRAMEWORK_OUTPUT}"
-    DEPENDS libchewing_ios create_simulator_fat
+    DEPENDS libchewing_framework_ios libchewing_framework_sim
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGE_DIR}"
     COMMAND xcodebuild -create-xcframework
-    -library "${BUILD_IOS_DIR}/libchewing.dylib" -headers "${LIBC_ROOT_DIR}/capi/include"
-    -library "${BUILD_SIM_FAT}/libchewing.dylib" -headers "${LIBC_ROOT_DIR}/capi/include"
+    -framework "${BUILD_IOS_DIR}/libchewing.framework"
+    -framework "${BUILD_SIM_FAT}/libchewing.framework"
     -output "${XCFRAMEWORK_OUTPUT}"
     COMMENT "↪ Creating libchewing.xcframework in ${PACKAGE_DIR}"
 )
