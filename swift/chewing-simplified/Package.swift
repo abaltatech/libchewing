@@ -21,13 +21,13 @@ let package = Package(
     ],
     targets: [
         .binaryTarget(
-            name: "CLibChewing",
+            name: "libchewing",
             path: "libchewing.xcframework"
         ),
         .target(
             name: "Chewing",
             dependencies: [
-                .target(name: "CLibChewing"),
+                .target(name: "libchewing"),
             ],
             path: "src",
             resources: [

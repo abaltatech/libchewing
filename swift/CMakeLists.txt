@@ -129,14 +129,10 @@ add_custom_command(
 )
 add_custom_target(libchewing_framework_sim DEPENDS "${BUILD_SIM_FAT}/libchewing.framework/libchewing")
 
-
-# 6.1) Create the modulemap
-file(WRITE "${BUILD_BASE_DIR}/module.modulemap" "module CLibChewing {\n  header \"chewing-simplified.h\"\n  export *\n}\n")
-
 # Copy module.modulemap into framework Modules
 add_custom_command(TARGET libchewing_framework_ios POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Modules"
-    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_BASE_DIR}/module.modulemap" "${BUILD_IOS_DIR}/libchewing.framework/Modules/module.modulemap"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_IOS_DIR}/libchewing.framework/Modules/module.modulemap"
 )
 # Copy Info.plist into device framework
 add_custom_command(TARGET libchewing_framework_ios POST_BUILD
@@ -145,7 +141,7 @@ add_custom_command(TARGET libchewing_framework_ios POST_BUILD
 
 add_custom_command(TARGET libchewing_framework_sim POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Modules"
-    COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_BASE_DIR}/module.modulemap" "${BUILD_SIM_FAT}/libchewing.framework/Modules/module.modulemap"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_SIM_FAT}/libchewing.framework/Modules/module.modulemap"
 )
 # Copy Info.plist into simulator framework
 add_custom_command(TARGET libchewing_framework_sim POST_BUILD

@@ -1,4 +1,6 @@
-module CLibChewing {
-  header "chewing-simplified.h"
-  export *
+framework module libchewing {
+    umbrella header "chewing-simplified.h"
+
+    export *
+    module * { export * }
 }

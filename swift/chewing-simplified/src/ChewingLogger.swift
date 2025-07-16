@@ -7,7 +7,7 @@ import Darwin
 import Foundation
 import os
 
-import CLibChewing
+import libchewing
 
 /// Internal helper to route Chewing engine log callbacks through LoggingConfig.
 package struct ChewingLogger {

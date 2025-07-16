@@ -3,7 +3,7 @@
 //  Chewing
 //
 
-import CLibChewing
+import libchewing
 import Foundation
 import Darwin
 
@@ -21,7 +21,7 @@ public enum ChewingWrapperError: Error {
 
 // MARK: - ChewingWrapper
 
-/// A Swift wrapper around the native Chewing C API (CLibChewing).
+/// A Swift wrapper around the native Chewing C API (libchewing).
 ///
 /// This actor manages the lifecycle of the Chewing input context,
 /// forwards keystrokes to the library, and dispatches callback events

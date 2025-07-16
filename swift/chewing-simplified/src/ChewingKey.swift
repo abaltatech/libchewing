@@ -3,7 +3,7 @@
 //  Chewing
 //
 
-import CLibChewing
+import libchewing
 import Foundation
 
 // MARK: - ChewingKey
