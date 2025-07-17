@@ -50,7 +50,7 @@ public actor ChewingWrapper {
         ///   - userDirectoryPath: Optional override for the user directory path.
         ///   - loggingConfig: Logging configuration.
         public init(
-            candPerPage: Int = 10,
+            candPerPage: Int = 8,
             maxChiSymbolLen: Int = 18,
             dataDirectoryPath: String? = nil,
             userDirectoryPath: String? = nil,
