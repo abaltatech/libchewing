@@ -32,6 +32,9 @@ let package = Package(
             path: "src",
             resources: [
                 .process("Resources"),
+            ],
+            linkerSettings: [
+                .linkedFramework("libchewing")
             ]
         ),
     ],
