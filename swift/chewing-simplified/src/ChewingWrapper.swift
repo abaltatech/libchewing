@@ -31,6 +31,7 @@ public enum ChewingWrapperError: Error {
 ///
 /// This wrapper is a singleton and must be configured exactly once before use by calling
 /// `ChewingWrapper.configure(_:)`. Access the shared instance via `ChewingWrapper.shared()`.
+/// - Note: Call `ChewingWrapper.reset()` to tear down and reconfigure for a new instance.
 public actor ChewingWrapper {
     /// Configuration options for initializing the singleton ChewingWrapper.
     /// Customize candidate page size, symbol length, and data paths prior to first use.
@@ -76,10 +77,14 @@ public actor ChewingWrapper {
     /// Cached shared instance after successful initialization.
     private static var sharedInstance: ChewingWrapper?
 
-    /// Returns the shared ChewingWrapper instance, initializing it if needed.
+    /// Returns the singleton `ChewingWrapper` instance, initializing it if needed.
     ///
-    /// - Throws: `ChewingWrapperError.notConfigured` if `configure(_:)` was not called.
-    ///           `ChewingWrapperError.initializationFailed` if the underlying init fails.
+    /// If the wrapper has not been preconfigured via `configure(_:)`, this method throws the corresponding error.
+    ///
+    /// - Returns: The shared `ChewingWrapper` instance.
+    /// - Throws:
+    ///   - `ChewingWrapperError.notConfigured` if `configure(_:)` was not called.
+    ///   - `ChewingWrapperError.initializationFailed` if the underlying native engine initialization fails.
     public static func shared() throws -> ChewingWrapper {
         if let inst = sharedInstance {
             return inst
@@ -92,35 +97,21 @@ public actor ChewingWrapper {
         return wrapper
     }
 
-    /// These are Swift closures that user code can set:
-    /// Closure invoked when the Chewing engine generates a new list of candidates.
-    /// - Parameter candidates: An array of candidate strings from the engine.
-    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
-    public var onCandidateUpdate: (([String]) -> Void)?
-    /// Closure invoked when the Chewing engine commits text to the application.
-    /// - Parameter committedText: The string that was committed.
-    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
-    public var onCommit: ((String) -> Void)?
-    /// Closure invoked when the Chewing engine's composed buffer is updated.
-    /// - Parameter bufferText: The current content of the composition buffer.
-    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
-    public var onBufferUpdate: ((String) -> Void)?
-    /// Closure invoked when the Chewing engine's preedit (in-progress composition) text changes.
-    /// - Parameter preeditText: The current preedit text.
-    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
-    public var onPreeditUpdate: ((String) -> Void)?
-
-    /// Returns the file system path to the directory containing Chewing data files.
+    /// Resets the `ChewingWrapper` singleton, allowing a new configuration.
     ///
-    /// The Chewing package should include required `.dat` resources under
-    /// its SwiftPM `resources:` configuration. This path is used when
-    /// initializing the Chewing context.
-    public static var dataDirectoryPath: String? {
-        return Bundle.module.resourcePath
+    /// Deallocates the current instance and clears any preconfigured settings.
+    /// After calling this, `configure(_:)` must be invoked before accessing `shared()`.
+    public static func reset() {
+        sharedInstance = nil
+        preconfigured = nil
     }
 
-    /// Private initializer for the singleton instance.
-    /// - Parameter cfg: The Configuration provided via `configure(_:)`.
+    /// Initializes a new `ChewingWrapper` instance with the specified configuration.
+    ///
+    /// - Parameter cfg: The configuration options used to set up the Chewing engine.
+    /// - Throws:
+    ///   - `ChewingWrapperError.notFound` if the data directory path cannot be located.
+    ///   - `ChewingWrapperError.initializationFailed` if allocation of C strings or engine initialization fails.
     private init(cfg: Configuration) throws {
         // Initialize the internal logger to route Chewing logs
         logger = ChewingLogger(config: cfg.loggingConfig)
@@ -164,14 +155,54 @@ public actor ChewingWrapper {
     }
 
     deinit {
-        shutdown()
+        guard isInitialized else { return }
+        _ = cs_terminate()
+        ctx = cs_context_s()
+        isInitialized = false
     }
 
-    /// Sends a single key input to the Chewing engine and updates state.
+    /// These are Swift closures that user code can set:
+    /// Closure invoked when the Chewing engine generates a new list of candidates.
+    /// - Parameter candidates: An array of candidate strings from the engine.
+    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
+    public var onCandidateUpdate: (([String]) -> Void)?
+    /// Closure invoked when the Chewing engine commits text to the application.
+    /// - Parameter committedText: The string that was committed.
+    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
+    public var onCommit: ((String) -> Void)?
+    /// Closure invoked when the Chewing engine's composed buffer is updated.
+    /// - Parameter bufferText: The current content of the composition buffer.
+    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
+    public var onBufferUpdate: ((String) -> Void)?
+    /// Closure invoked when the Chewing engine's preedit (in-progress composition) text changes.
+    /// - Parameter preeditText: The current preedit text.
+    /// - Note: Invoked within the actor's context; consumers must dispatch to the main thread for UI updates.
+    public var onPreeditUpdate: ((String) -> Void)?
+
+    /// Returns the file system path to the directory containing Chewing data files.
     ///
-    /// - Parameter key: A `Character` representing a keystroke (e.g., a letter, space, backspace, or enter).
-    /// - Returns: `true` if processing succeeded, `false` otherwise.
-    /// - Note: This method is actor-isolated and can be called from any thread; execution is serialized by the actor.
+    /// The Chewing package should include required `.dat` resources under
+    /// its SwiftPM `resources:` configuration. This path is used when
+    /// initializing the Chewing context.
+    public static var dataDirectoryPath: String? {
+        return Bundle.module.resourcePath
+    }
+
+    private var ctx: cs_context_s = .init()
+    private var isInitialized: Bool = false
+    private var logger: ChewingLogger
+}
+
+// MARK: - Interacting with libchewing
+
+public extension ChewingWrapper {
+
+    /// Processes a single character input through the Chewing engine.
+    ///
+    /// This method serializes execution within the actor's context.
+    ///
+    /// - Parameter key: A character representing a keystroke (e.g., letter, space, backspace, or enter).
+    /// - Returns: `true` if the engine processed the key successfully; otherwise, `false`.
     @discardableResult
     public func process(key: Character) -> Bool {
         guard isInitialized else { return false }
@@ -180,49 +211,57 @@ public actor ChewingWrapper {
         return cs_process_key(CChar(cKey))
     }
 
-    /// Selects a candidate word by its index and commits it.
-    ///
-    /// - Parameter index: Zero-based index of the candidate to commit.
-    /// - Returns: `true` if selection succeeded, `false` otherwise.
-    /// - Note: This method is actor-isolated and can be called from any thread; execution is serialized by the actor.
-    @discardableResult
-    public func selectCandidate(at index: Int) -> Bool {
-        guard isInitialized else { return false }
-
-        return cs_select_candidate(Int32(index))
-    }
-
-    /// Manually terminate the underlying C library and reset the wrapper state.
-    public func shutdown() {
-        guard isInitialized else { return }
-        _ = cs_terminate()
-        ctx = cs_context_s()
-        isInitialized = false
-    }
-
-    private var ctx: cs_context_s = .init()
-    private var isInitialized: Bool = false
-    private var logger: ChewingLogger
-}
-
-public extension ChewingWrapper {
-    /// Sends a key input using a `ChewingKey` enum value.
+    /// Processes a special key input through the Chewing engine.
     ///
     /// - Parameter key: A `ChewingKey` value (e.g., `.enter`, `.space`, `.backspace`).
-    /// - Returns: `true` if processing succeeded, `false` otherwise.
-    /// - Note: This method is actor-isolated and can be called from any thread; execution is serialized by the actor.
+    /// - Returns: `true` if the engine processed the key successfully; otherwise, `false`.
     @discardableResult
     func process(key: ChewingKey) -> Bool {
         guard isInitialized else { return false }
 
         return cs_process_key(key.cValue)
     }
+
+    /// Selects a candidate option by its index.
+    ///
+    /// - Parameter index: Zero-based index of the candidate to commit.
+    /// - Returns: `true` if selection succeeded; otherwise, `false`.
+    @discardableResult
+    public func selectCandidate(at index: Int) -> Bool {
+        guard isInitialized else { return false }
+
+        return cs_select_candidate(Int32(index))
+    }
 }
 
-// MARK: Private extensions
+// MARK: - Callback Registration
+
+public extension ChewingWrapper {
+    /// Registers closures to receive events from the Chewing engine.
+    ///
+    /// This method is actor-isolated and must be called with `await`.
+    ///
+    /// - Parameters:
+    ///   - onCandidateUpdate: Called with an array of candidate strings when the candidate list updates.
+    ///   - onBufferUpdate: Called with the current buffer text when it changes.
+    ///   - onPreeditUpdate: Called with the current preedit text when it changes.
+    ///   - onCommit: Called with the committed text when the engine commits input.
+    func registerCallbacks(
+        onCandidateUpdate: @escaping ([String]) -> Void,
+        onBufferUpdate: @escaping (String) -> Void,
+        onPreeditUpdate: @escaping (String) -> Void,
+        onCommit: @escaping (String) -> Void
+    ) {
+        self.onCandidateUpdate = onCandidateUpdate
+        self.onBufferUpdate = onBufferUpdate
+        self.onPreeditUpdate = onPreeditUpdate
+        self.onCommit = onCommit
+    }
+}
+
+// MARK: - C callback entry points (bridge to instance closures)
 
 private extension ChewingWrapper {
-    // MARK: - C callback entry points (bridge to instance closures)
 
     /// C callback invoked when the Chewing engine has generated a list of candidates.
     ///
@@ -234,12 +273,15 @@ private extension ChewingWrapper {
     ///   - items: C array of C strings representing candidate words.
     private static let candidateInfoHandler: @convention(c) (Int32, Int32, Int32, Int32, UnsafeMutablePointer<UnsafePointer<CChar>?>?) -> Void = { _, _, _, total, items in
         guard let wrapper = try? ChewingWrapper.shared() else { return }
-        guard let items = items else { return }
+        guard let items else { return }
+
         let buffer = UnsafeBufferPointer(start: items, count: Int(total))
         let candidates = buffer.compactMap { ptr -> String? in
             guard let cStrPtr = ptr else { return nil }
             return String(cString: cStrPtr, encoding: .utf8)
         }
+
+        guard !candidates.isEmpty else { return }
         Task { await wrapper.handleCandidateUpdate(candidates) }
     }
 
@@ -285,30 +327,5 @@ private extension ChewingWrapper {
 
     private func handleCommit(_ committedText: String) {
         onCommit?(committedText)
-    }
-}
-
-// MARK: - Callback Registration
-
-public extension ChewingWrapper {
-    /// Register closures to receive Chewing engine events.
-    ///
-    /// - Parameters:
-    ///   - onCandidateUpdate: Invoked when the candidate list changes.
-    ///   - onBufferUpdate: Invoked when the buffer text changes.
-    ///   - onPreeditUpdate: Invoked when the preedit text changes.
-    ///   - onCommit: Invoked when text is committed.
-    ///
-    /// Must be called with `await` because it's actor-isolated.
-    func registerCallbacks(
-        onCandidateUpdate: @escaping ([String]) -> Void,
-        onBufferUpdate: @escaping (String) -> Void,
-        onPreeditUpdate: @escaping (String) -> Void,
-        onCommit: @escaping (String) -> Void
-    ) {
-        self.onCandidateUpdate = onCandidateUpdate
-        self.onBufferUpdate = onBufferUpdate
-        self.onPreeditUpdate = onPreeditUpdate
-        self.onCommit = onCommit
     }
 }
