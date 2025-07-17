@@ -108,6 +108,8 @@ package struct ChewingLogger {
     }
 }
 
+// MARK: - LogLevel
+
 private extension LogLevel {
     /// Converts a numeric log level from the Chewing C engine into the Swift `LogLevel` enum.
     ///
