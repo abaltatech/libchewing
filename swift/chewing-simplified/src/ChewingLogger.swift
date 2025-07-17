@@ -5,35 +5,32 @@
 
 import Foundation
 import libchewing
+import os
 
 // MARK: - ChewingLogger
 
-/// Routes log messages emitted by the Chewing engine through a user-configurable `LoggingConfig`.
+/// Manages routing of raw log messages from the Chewing C engine to Swift logging backends.
 ///
-/// The `ChewingLogger` manages registration of a Swift-side logger callback, transforms raw C log
-/// messages into Swift `String` instances, applies filtering based on log levels, and forwards
-/// messages to either a custom callback or the system `OSLog`.
+/// Transforms C log callbacks into Swift `String` instances, filters entries according to
+/// `LoggingConfig`, and forwards them to a user-provided callback or the system `OSLog`.
 package struct ChewingLogger {
-    /// Actor that maintains the active `ChewingLogger` instance for thread-safe access.
-    actor LoggerState {
-        static let shared = LoggerState()
-        private var current: ChewingLogger?
-
-        /// Registers the provided `ChewingLogger` as the current active logger.
-        func register(_ logger: ChewingLogger) {
-            current = logger
-        }
-
-        /// Retrieves the currently registered `ChewingLogger` instance, if any.
-        func getCurrent() -> ChewingLogger? {
-            return current
-        }
-    }
-
     /// The default `OSLog` logger used when no callback is configured by the user.
     private static let osLogger = Logger(subsystem: "chewing", category: "ChewingLogger")
     /// Serial dispatch queue to serialize `OSLog` calls for thread-safe logging.
     private static let osLoggerQueue = DispatchQueue(label: "chewing.ChewingLogger.osLoggerQueue")
+    /// Backing storage for the active `ChewingLogger` instance.
+    private static var current: ChewingLogger?
+
+    /// Thread-safe accessor for the currently registered `ChewingLogger` instance.
+    /// - Note: Uses `osLoggerQueue` to synchronize reads and writes.
+    private static var shared: ChewingLogger? {
+        get {
+            ChewingLogger.osLoggerQueue.sync { ChewingLogger.current }
+        }
+        set {
+            ChewingLogger.osLoggerQueue.async { ChewingLogger.current = newValue }
+        }
+    }
 
     /// Configuration controlling which log levels are enabled and the custom callback to invoke.
     let config: LoggingConfig
@@ -44,47 +41,41 @@ package struct ChewingLogger {
     /// - Note: Registration is performed asynchronously on a background task.
     init(config: LoggingConfig) {
         self.config = config
-        Task {
-            await LoggerState.shared.register(self)
-        }
+        ChewingLogger.shared = self
     }
 
-    /// A C-compatible function pointer to receive raw log messages from the Chewing engine.
+    /// C-compatible log handler used by the Chewing C engine to forward log messages to Swift.
     ///
-    /// This callback is passed to the native engine to handle incoming log data, filters messages
-    /// according to the active `LoggingConfig`, duplicates C strings for memory safety, decodes them
-    /// into Swift `String`s, and forwards valid messages to the instance `log(level:message:)` method.
+    /// Passed to the native engine as the log callback, this closure filters and transforms raw C
+    /// log messages into Swift `String` instances and dispatches them via the active `ChewingLogger`.
     ///
     /// - Parameters:
     ///   - level: The numeric log level constant defined by the Chewing C engine.
     ///   - message: A null-terminated C string containing the log message text.
     static let cLogger: @convention(c) (Int32, UnsafePointer<CChar>?) -> Void = { level, message in
-        Task {
-            guard let logger = await LoggerState.shared.getCurrent(),
-                  logger.config.enabled else { return }
+        guard let logger = ChewingLogger.shared, logger.config.enabled else { return }
 
-            let logLevel = LogLevel.fromChewing(level: level)
-            guard logger.config.levels.contains(logLevel) else { return }
+        let logLevel = LogLevel.fromChewing(level: level)
+        guard logger.config.levels.contains(logLevel) else { return }
 
-            guard let dup = strdup(message) else { return }
-            defer { free(dup) }
-            guard let msgStr = String(validatingUTF8: dup) else { return }
+        guard let dup = strdup(message) else { return }
+        defer { free(dup) }
+        guard let msgStr = String(validatingUTF8: dup) else { return }
 
-            logger.log(level: logLevel, message: "[chewing]\(msgStr)")
-        }
+        logger.log(level: logLevel, message: "[chewing]\(msgStr)")
     }
 
-    /// Logs the given message at the specified log level.
+    /// Logs a message at the specified level, using either a custom callback or `OSLog`.
     ///
-    /// If a custom callback is configured in `LoggingConfig`, forwards the message to that callback.
-    /// Otherwise, dispatches the message to the system `OSLog` on a serial queue.
+    /// Depending on the `LoggingConfig`, forwards the log entry to the user callback or
+    /// asynchronously emits it via the system `OSLog` on the `osLoggerQueue`.
     ///
     /// - Parameters:
-    ///   - level: The application-level `LogLevel` for this message.
-    ///   - message: The formatted log message text.
+    ///   - level: The severity level of the log message.
+    ///   - message: The content of the log entry.
     func log(level: LogLevel, message: String) {
-        if let cb = config.callback {
-            cb(level, message)
+        if let callback = config.callback {
+            callback(level, message)
         } else {
             ChewingLogger.osLoggerQueue.async {
                 switch level {

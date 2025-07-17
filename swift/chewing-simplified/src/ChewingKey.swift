@@ -3,8 +3,8 @@
 //  Chewing
 //
 
-import libchewing
 import Foundation
+import libchewing
 
 // MARK: - ChewingKey
 

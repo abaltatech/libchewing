@@ -3,9 +3,9 @@
 //  Chewing
 //
 
-import libchewing
-import Foundation
 import Darwin
+import Foundation
+import libchewing
 
 // MARK: - ChewingWrapperError
 
@@ -124,7 +124,8 @@ public actor ChewingWrapper {
         let userDirectoryPath = cfg.userDirectoryPath ?? dataDirectoryPath
 
         guard let dataCString = strdup(dataDirectoryPath),
-              let userCString = strdup(userDirectoryPath) else {
+              let userCString = strdup(userDirectoryPath)
+        else {
             logger.log(level: .critical, message: "Failed to allocate C strings for data directory paths")
             throw ChewingWrapperError.initializationFailed
         }
@@ -196,7 +197,6 @@ public actor ChewingWrapper {
 // MARK: - Interacting with libchewing
 
 public extension ChewingWrapper {
-
     /// Processes a single character input through the Chewing engine.
     ///
     /// This method serializes execution within the actor's context.
@@ -204,7 +204,7 @@ public extension ChewingWrapper {
     /// - Parameter key: A character representing a keystroke (e.g., letter, space, backspace, or enter).
     /// - Returns: `true` if the engine processed the key successfully; otherwise, `false`.
     @discardableResult
-    public func process(key: Character) -> Bool {
+    func process(key: Character) -> Bool {
         guard isInitialized else { return false }
         guard let cKey = key.asciiValue else { return false }
 
@@ -227,7 +227,7 @@ public extension ChewingWrapper {
     /// - Parameter index: Zero-based index of the candidate to commit.
     /// - Returns: `true` if selection succeeded; otherwise, `false`.
     @discardableResult
-    public func selectCandidate(at index: Int) -> Bool {
+    func selectCandidate(at index: Int) -> Bool {
         guard isInitialized else { return false }
 
         return cs_select_candidate(Int32(index))
@@ -262,7 +262,6 @@ public extension ChewingWrapper {
 // MARK: - C callback entry points (bridge to instance closures)
 
 private extension ChewingWrapper {
-
     /// C callback invoked when the Chewing engine has generated a list of candidates.
     ///
     /// - Parameters:
@@ -313,6 +312,7 @@ private extension ChewingWrapper {
     }
 
     // MARK: - Callback routing handlers (actor methods)
+
     private func handleCandidateUpdate(_ candidates: [String]) {
         onCandidateUpdate?(candidates)
     }
