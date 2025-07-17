@@ -113,7 +113,11 @@ add_custom_command(
     DEPENDS libchewing_ios
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Headers"
     COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_IOS_DIR}/libchewing.dylib" "${BUILD_IOS_DIR}/libchewing.framework/libchewing"
+    COMMAND install_name_tool -id "@rpath/libchewing.framework/libchewing" "${BUILD_IOS_DIR}/libchewing.framework/libchewing"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${LIBC_ROOT_DIR}/capi/include" "${BUILD_IOS_DIR}/libchewing.framework/Headers"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Modules"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_IOS_DIR}/libchewing.framework/Modules/module.modulemap"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/Info.plist" "${BUILD_IOS_DIR}/libchewing.framework/Info.plist"
     COMMENT "↪ Creating iOS framework at ${BUILD_IOS_DIR}/libchewing.framework"
 )
 add_custom_target(libchewing_framework_ios DEPENDS "${BUILD_IOS_DIR}/libchewing.framework/libchewing")
@@ -124,29 +128,14 @@ add_custom_command(
     DEPENDS create_simulator_fat
     COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Headers"
     COMMAND ${CMAKE_COMMAND} -E copy "${BUILD_SIM_FAT}/libchewing.dylib" "${BUILD_SIM_FAT}/libchewing.framework/libchewing"
+    COMMAND install_name_tool -id "@rpath/libchewing.framework/libchewing" "${BUILD_SIM_FAT}/libchewing.framework/libchewing"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${LIBC_ROOT_DIR}/capi/include" "${BUILD_SIM_FAT}/libchewing.framework/Headers"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Modules"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_SIM_FAT}/libchewing.framework/Modules/module.modulemap"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/Info.plist" "${BUILD_SIM_FAT}/libchewing.framework/Info.plist"
     COMMENT "↪ Creating simulator framework at ${BUILD_SIM_FAT}/libchewing.framework"
 )
 add_custom_target(libchewing_framework_sim DEPENDS "${BUILD_SIM_FAT}/libchewing.framework/libchewing")
-
-# Copy module.modulemap into framework Modules
-add_custom_command(TARGET libchewing_framework_ios POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_IOS_DIR}/libchewing.framework/Modules"
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_IOS_DIR}/libchewing.framework/Modules/module.modulemap"
-)
-# Copy Info.plist into device framework
-add_custom_command(TARGET libchewing_framework_ios POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/Info.plist" "${BUILD_IOS_DIR}/libchewing.framework/Info.plist"
-)
-
-add_custom_command(TARGET libchewing_framework_sim POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_SIM_FAT}/libchewing.framework/Modules"
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/module.modulemap" "${BUILD_SIM_FAT}/libchewing.framework/Modules/module.modulemap"
-)
-# Copy Info.plist into simulator framework
-add_custom_command(TARGET libchewing_framework_sim POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/Info.plist" "${BUILD_SIM_FAT}/libchewing.framework/Info.plist"
-)
 
 #
 # 6.2) Create the XCFramework once device + fat simulator are ready
