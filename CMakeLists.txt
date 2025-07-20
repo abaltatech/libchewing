@@ -113,9 +113,6 @@ if(CMAKE_SYSTEM MATCHES "Windows")
     if(VCPKG_TARGET_TRIPLET)
         corrosion_set_env_vars(chewing-cli VCPKGRS_TRIPLET=${VCPKG_TARGET_TRIPLET})
     endif()
-
-    # Define export macro for building the library
-    target_compile_definitions(libchewing PRIVATE BUILDING_LIBCHEWING)
 endif()
 
 # Feature probe
@@ -201,6 +198,8 @@ set(ALL_SOURCES
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})
+# Define export macro for building the library
+target_compile_definitions(libchewing PRIVATE BUILDING_LIBCHEWING)
 set_target_properties(libchewing PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_definitions(libchewing PRIVATE
     CHEWING_DATADIR=\"${CMAKE_INSTALL_FULL_DATADIR}/libchewing\"
