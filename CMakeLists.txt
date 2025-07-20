@@ -213,7 +213,10 @@ target_include_directories(libchewing
 corrosion_set_env_vars(chewing_capi
     CHEWING_DATADIR=${CMAKE_INSTALL_FULL_DATADIR}/libchewing
 )
-target_link_libraries(libchewing PRIVATE chewing_capi stdc++)
+target_link_libraries(libchewing PRIVATE chewing_capi)
+if(NOT MSVC)
+  target_link_libraries(libchewing PRIVATE stdc++)
+endif()
 target_link_libraries(chewing_capi INTERFACE ${SQLite3_LIBRARIES})
 
 if(BUILD_SHARED_LIBS)
