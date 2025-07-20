@@ -113,6 +113,9 @@ if(CMAKE_SYSTEM MATCHES "Windows")
     if(VCPKG_TARGET_TRIPLET)
         corrosion_set_env_vars(chewing-cli VCPKGRS_TRIPLET=${VCPKG_TARGET_TRIPLET})
     endif()
+
+    # Define export macro for building the library
+    target_compile_definitions(libchewing PRIVATE BUILDING_LIBCHEWING)
 endif()
 
 # Feature probe
