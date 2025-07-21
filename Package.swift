@@ -22,14 +22,14 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "libchewing",
-            path: "libchewing.xcframework"
+            path: "swift/chewing-simplified/libchewing.xcframework"
         ),
         .target(
             name: "Chewing",
             dependencies: [
                 .target(name: "libchewing"),
             ],
-            path: "src",
+            path: "swift/chewing-simplified/src",
             resources: [
                 .process("Resources"),
             ],
