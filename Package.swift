@@ -22,7 +22,7 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "libchewing",
-            path: "swift/chewing-simplified/libchewing.xcframework"
+            path: "https://github.com/abaltatech/libchewing/releases/download/\(version)/libchewing.xcframework.zip"
         ),
         .target(
             name: "Chewing",
