@@ -22,7 +22,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "libchewing",
-            url: "https://github.com/abaltatech/libchewing/releases/download/\(version)/libchewing.xcframework.zip"
+            url: "https://github.com/abaltatech/libchewing/releases/download/\(version)/libchewing.xcframework.zip",
+            checksum: checksum
         ),
         .target(
             name: "Chewing",
