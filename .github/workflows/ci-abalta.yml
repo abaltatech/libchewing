@@ -118,14 +118,14 @@ jobs:
             }
       - name: Update Package.swift
         run: |
-          sed -i "s/let version = \".*\"/let version = \"${{ steps.get_version.outputs.VERSION }}\"/" swift/chewing-simplified/Package.swift
-          sed -i "s/let checksum = \".*\"/let checksum = \"$(shasum -a 256 libchewing.xcframework.zip | cut -d ' ' -f 1)\"/" swift/chewing-simplified/Package.swift
+          sed -i "s/let version = \".*\"/let version = \"${{ steps.get_version.outputs.VERSION }}\"/" ./Package.swift
+          sed -i "s/let checksum = \".*\"/let checksum = \"$(shasum -a 256 libchewing.xcframework.zip | cut -d ' ' -f 1)\"/" ./Package.swift
 
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add swift/chewing-simplified/Package.swift
+          git add ./Package.swift
           git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update Package.swift"
           git push origin master
 
