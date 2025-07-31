@@ -87,13 +87,13 @@ public struct LoggingConfig {
     ///   - callback: An optional closure to receive `(level, message)`
     public init(
         enabled: Bool = true,
-        levels: LogLevel = [.critical, .error, .warning, .info, .debug],
+        levels: UInt8,
         callback: ((LogLevel, String) -> Void)? = nil
     ) {
-        assert(levels.rawValue & ~LogLevel.all.rawValue == 0,
-               "LoggingConfig received an unknown log level bitmask with raw value [\(levels.rawValue)]")
+        assert(levels & ~LogLevel.all.rawValue == 0,
+               "LoggingConfig received an unknown log level bitmask with raw value [\(levels)]")
         self.enabled = enabled
-        self.levels = levels
+        self.levels = LogLevel(rawValue: levels)
         self.callback = callback
     }
 }
