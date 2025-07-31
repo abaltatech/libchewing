@@ -34,6 +34,13 @@ let package = Package(
             resources: [
                 .process("Resources"),
             ],
+            swiftSettings: [
+                // library evolution + module-interface only in release mode
+                .unsafeFlags([
+                    "-enable-library-evolution",
+                    "-emit-module-interface"
+                ], .when(configuration: .release))
+            ],
             linkerSettings: [
                 .linkedFramework("libchewing")
             ]
