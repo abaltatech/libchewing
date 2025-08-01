@@ -9,7 +9,7 @@ import Foundation
 
 /// OptionSet representing allowed logging levels.
 @frozen public struct LogLevel: OptionSet, CustomStringConvertible {
-    public let rawValue: UInt8
+    public let rawValue: Int
 
     /// Log level for critical messages; use for unrecoverable errors.
     public static let critical = LogLevel(rawValue: 1 << 0)
@@ -27,15 +27,9 @@ import Foundation
     /// Convenience for all known levels together.
     public static let all: LogLevel = [.critical, .error, .warning, .info, .debug, .verbose]
 
-    /// Convinience for production levels.
-    public static let production: LogLevel = [.critical, .error, .warning, .info]
-
-    /// Convinience for develop levels.
-    public static let develop: LogLevel = [.critical, .error, .warning, .info, .debug]
-
     /// Creates a LogLevel instance from a raw integer value.
     /// - Parameter rawValue: The bitmask value representing the log levels.
-    public init(rawValue: UInt8) {
+    public init(rawValue: Int) {
         self.rawValue = rawValue
     }
 
@@ -87,13 +81,13 @@ import Foundation
     ///   - callback: An optional closure to receive `(level, message)`
     public init(
         enabled: Bool = true,
-        levels: UInt8,
+        levels: LogLevel = [.critical, .error, .warning, .info, .debug],
         callback: ((LogLevel, String) -> Void)? = nil
     ) {
-        assert(levels & ~LogLevel.all.rawValue == 0,
-               "LoggingConfig received an unknown log level bitmask with raw value [\(levels)]")
+        assert(levels.rawValue & ~LogLevel.all.rawValue == 0,
+               "LoggingConfig received an unknown log level bitmask with raw value [\(levels.rawValue)]")
         self.enabled = enabled
-        self.levels = LogLevel(rawValue: levels)
+        self.levels = levels
         self.callback = callback
     }
 }
