@@ -13,7 +13,7 @@ import os
 ///
 /// Transforms C log callbacks into Swift `String` instances, filters entries according to
 /// `LoggingConfig`, and forwards them to a user-provided callback or the system `OSLog`.
-package struct ChewingLogger {
+@frozen package struct ChewingLogger {
     /// The default `OSLog` logger used when no callback is configured by the user.
     private static let osLogger = Logger(subsystem: "chewing", category: "ChewingLogger")
     /// Serial dispatch queue to serialize `OSLog` calls for thread-safe logging.

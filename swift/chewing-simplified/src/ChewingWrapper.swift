@@ -10,7 +10,7 @@ import libchewing
 // MARK: - ChewingWrapperError
 
 /// Errors that can occur when initializing or using the ChewingWrapper.
-public enum ChewingWrapperError: Error {
+@frozen public enum ChewingWrapperError: Error {
     /// Indicates that the Chewing data directory could not be located.
     case notFound
     /// Indicates that initialization of the native Chewing engine failed.
@@ -35,7 +35,7 @@ public enum ChewingWrapperError: Error {
 public actor ChewingWrapper {
     /// Configuration options for initializing the singleton ChewingWrapper.
     /// Customize candidate page size, symbol length, and data paths prior to first use.
-    public struct Configuration {
+    @frozen public struct Configuration {
         public var candPerPage: Int
         public var maxChiSymbolLen: Int
         public var dataDirectoryPath: String?

@@ -12,7 +12,7 @@ import libchewing
 ///
 /// This enum maps high‑level key names (enter, space, backspace)
 /// to the underlying C constants (`CHEWING_KEY_Enter`, etc.) used by the C API.
-public enum ChewingKey: UInt8 {
+@frozen public enum ChewingKey: UInt8 {
     /// Enter key (ASCII 10)
     case enter = 0
     /// Space key (ASCII 32)

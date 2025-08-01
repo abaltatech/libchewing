@@ -8,7 +8,7 @@ import Foundation
 // MARK: - LogLevel
 
 /// OptionSet representing allowed logging levels.
-public struct LogLevel: OptionSet, CustomStringConvertible {
+@frozen public struct LogLevel: OptionSet, CustomStringConvertible {
     public let rawValue: UInt8
 
     /// Log level for critical messages; use for unrecoverable errors.
@@ -67,7 +67,7 @@ public struct LogLevel: OptionSet, CustomStringConvertible {
 ///   }
 /// )
 /// ```
-public struct LoggingConfig {
+@frozen public struct LoggingConfig {
     /// If `false`, no messages will be emitted, regardless of `levels`.
     public let enabled: Bool
 
