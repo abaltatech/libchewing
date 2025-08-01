@@ -2,7 +2,7 @@
 import PackageDescription
 
 let version = "1.1.0"
-let checksum = "9758ba861e84b98a2df54158e5678de269fda74f0530217658335f41a3b252d3"
+let checksum = "a451ef1c427b7e3aa29abac5f7acf19f76641a1c2b9e1ff25628be2e7378e161"
 
 let package = Package(
     name: "Chewing",
