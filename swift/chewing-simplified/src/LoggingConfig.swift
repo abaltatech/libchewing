@@ -8,7 +8,7 @@ import Foundation
 // MARK: - LogLevel
 
 /// OptionSet representing allowed logging levels.
-public struct LogLevel: OptionSet, CustomStringConvertible {
+@frozen public struct LogLevel: OptionSet, CustomStringConvertible {
     public let rawValue: Int
 
     /// Log level for critical messages; use for unrecoverable errors.
@@ -61,7 +61,7 @@ public struct LogLevel: OptionSet, CustomStringConvertible {
 ///   }
 /// )
 /// ```
-public struct LoggingConfig {
+@frozen public struct LoggingConfig {
     /// If `false`, no messages will be emitted, regardless of `levels`.
     public let enabled: Bool
 
@@ -85,7 +85,7 @@ public struct LoggingConfig {
         callback: ((LogLevel, String) -> Void)? = nil
     ) {
         assert(levels.rawValue & ~LogLevel.all.rawValue == 0,
-               "LoggingConfig received an unknown log level bitmask")
+               "LoggingConfig received an unknown log level bitmask with raw value [\(levels.rawValue)]")
         self.enabled = enabled
         self.levels = levels
         self.callback = callback

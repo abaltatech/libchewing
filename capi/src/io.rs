@@ -90,6 +90,11 @@ unsafe fn str_from_ptr_with_nul<'a>(ptr: *const c_char) -> Option<&'a str> {
 }
 
 #[unsafe(no_mangle)]
+pub static CHEWING_OK: c_int = OK;
+#[unsafe(no_mangle)]
+pub static CHEWING_ERROR: c_int = ERROR;
+
+#[unsafe(no_mangle)]
 pub extern "C" fn chewing_new() -> *mut ChewingContext {
     unsafe { chewing_new2(null(), null(), None, null_mut()) }
 }
