@@ -127,8 +127,15 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing(
     JNIEnv* env, jobject) {
     bool ok = cs_terminate();
-    free(g_ctx.config.data_path);
-    free(g_ctx.config.user_path);
+    if (g_ctx.config.data_path) {
+        free(const_cast<char*>(g_ctx.config.data_path));
+        g_ctx.config.data_path = nullptr;
+    }
+
+    if (g_ctx.config.user_path) {
+        free(const_cast<char*>(g_ctx.config.user_path));
+        g_ctx.config.user_path = nullptr;
+    }
     env->DeleteGlobalRef(g_listener);
     g_listener = nullptr;
     return ok ? JNI_TRUE : JNI_FALSE;
