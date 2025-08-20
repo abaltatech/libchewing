@@ -75,7 +75,7 @@ static void jni_onCandidates(int pageSize, int numPages,
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing(
     JNIEnv* env, jobject /*thiz*/,
-    jstring dataPath, jint pp, jint ml, jobject listener) {
+    jstring dataPath, jstring userPath, jint pp, jint ml, jobject listener) {
 
     // grab and stash JavaVM + listener
     env->GetJavaVM(&g_vm);
@@ -95,6 +95,7 @@ Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing(
     // fill cs_context_t
     std::memset(&g_ctx, 0, sizeof(g_ctx));
     g_ctx.config.data_path         = strdup_from_jstring(env, dataPath);
+    g_ctx.config.user_path         = strdup_from_jstring(env, userPath);
     g_ctx.config.cand_per_page     = pp;
     g_ctx.config.max_chi_symbol_len = ml;
 
@@ -108,16 +109,18 @@ Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing(
     return ok ? JNI_TRUE : JNI_FALSE;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey(
     JNIEnv*, jobject, jchar key) {
-    cs_process_key(static_cast<char>(key));
+    bool ok = cs_process_key(static_cast<char>(key));
+    return ok ? JNI_TRUE : JNI_FALSE;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate(
     JNIEnv*, jobject, jint idx) {
-    cs_select_candidate(idx);
+    bool ok = cs_select_candidate(idx);
+    return ok ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -125,6 +128,7 @@ Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing(
     JNIEnv* env, jobject) {
     bool ok = cs_terminate();
     free(g_ctx.config.data_path);
+    free(g_ctx.config.user_path);
     env->DeleteGlobalRef(g_listener);
     g_listener = nullptr;
     return ok ? JNI_TRUE : JNI_FALSE;

@@ -146,3 +146,4 @@ contrib/test.sqlite3
 # fuzzer
 /fuzzer/in
 /fuzzer/out
+/.build
