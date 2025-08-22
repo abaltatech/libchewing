@@ -194,7 +194,6 @@ option(ENABLE_JNI "Enable JNI support" OFF)
 set(ALL_SOURCES
     capi/src/chewing.c
     capi/src/chewing-simplified.cpp
-    $<$<BOOL:${ENABLE_JNI}>:capi/src/chewingJNI.cpp>
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})
@@ -228,17 +227,6 @@ if(BUILD_SHARED_LIBS)
             PRIVATE /NODEFAULTLIB:MSVCRTD
             PRIVATE /NODEFAULTLIB:LIBCMTD
         )
-        if(ENABLE_JNI)
-            target_link_options(libchewing
-                PRIVATE /EXPORT:Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing
-                PRIVATE /EXPORT:Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey
-                PRIVATE /EXPORT:Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate
-                PRIVATE /EXPORT:Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing
-            )
-        endif()
-        set_target_properties(libchewing PROPERTIES
-            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-msvc.def
-        )
     elseif(APPLE)
         # Mach-O export list on Apple platforms (macOS, iOS)
         target_link_options(libchewing
@@ -249,22 +237,6 @@ if(BUILD_SHARED_LIBS)
             PRIVATE LINKER:-u,_cs_process_key
             PRIVATE LINKER:-u,_cs_select_candidate
         )
-        if(ENABLE_JNI)
-            target_link_options(libchewing
-                PRIVATE LINKER:-exported_symbol,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing
-                PRIVATE LINKER:-exported_symbol,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey
-                PRIVATE LINKER:-exported_symbol,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate
-                PRIVATE LINKER:-exported_symbol,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing
-                # Ensure they aren’t stripped when dead_strip is on:
-                PRIVATE LINKER:-u,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing
-                PRIVATE LINKER:-u,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey
-                PRIVATE LINKER:-u,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate
-                PRIVATE LINKER:-u,_Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing
-            )
-        endif()
-        set_target_properties(libchewing PROPERTIES
-            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-mach_o.map
-        )
     else()
         # ELF version-script on other UNIX platforms
         target_link_options(libchewing
@@ -272,22 +244,6 @@ if(BUILD_SHARED_LIBS)
             PRIVATE LINKER:--gc-sections
             PRIVATE LINKER:-u,chewing_new
             PRIVATE LINKER:-u,chewing_version
-        )
-        if(ENABLE_JNI)
-            target_link_options(libchewing
-                PRIVATE LINKER:--export-dynamic-symbol=Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing
-                PRIVATE LINKER:--export-dynamic-symbol=Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey
-                PRIVATE LINKER:--export-dynamic-symbol=Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate
-                PRIVATE LINKER:--export-dynamic-symbol=Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing
-                # Keep them from being dropped with --gc-sections:
-                PRIVATE LINKER:--undefined=Java_com_abaltatech_keyboard_chinese_ChineseConverter_initChewing
-                PRIVATE LINKER:--undefined=Java_com_abaltatech_keyboard_chinese_ChineseConverter_processKey
-                PRIVATE LINKER:--undefined=Java_com_abaltatech_keyboard_chinese_ChineseConverter_selectCandidate
-                PRIVATE LINKER:--undefined=Java_com_abaltatech_keyboard_chinese_ChineseConverter_terminateChewing
-            )
-        endif()
-        set_target_properties(libchewing PROPERTIES
-            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-elf.map
         )
     endif()
 endif()
@@ -301,6 +257,29 @@ else()
         OUTPUT_NAME chewing
         INSTALL_NAME_DIR "@rpath"
     )
+endif()
+
+if(ENABLE_JNI)
+    add_library(chewing_jni SHARED capi/src/chewingJNI.cpp)
+    target_link_libraries(chewing_jni PRIVATE libchewing)
+    target_include_directories(chewing_jni
+        PUBLIC
+            $<BUILD_INTERFACE:${INC_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/chewing>
+    )
+    if(MSVC)
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewingjni
+        )
+    else()
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewing-jni
+            INSTALL_NAME_DIR "@rpath"
+        )
+    endif()
+    install(TARGETS chewing_jni
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${ALL_INC} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/chewing)
