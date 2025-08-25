@@ -227,6 +227,9 @@ if(BUILD_SHARED_LIBS)
             PRIVATE /NODEFAULTLIB:MSVCRTD
             PRIVATE /NODEFAULTLIB:LIBCMTD
         )
+        set_target_properties(libchewing PROPERTIES
+            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-msvc.def
+        )
     elseif(APPLE)
         # Mach-O export list on Apple platforms (macOS, iOS)
         target_link_options(libchewing
@@ -237,6 +240,9 @@ if(BUILD_SHARED_LIBS)
             PRIVATE LINKER:-u,_cs_process_key
             PRIVATE LINKER:-u,_cs_select_candidate
         )
+        set_target_properties(libchewing PROPERTIES
+            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-mach_o.map
+        )
     else()
         # ELF version-script on other UNIX platforms
         target_link_options(libchewing
@@ -244,6 +250,9 @@ if(BUILD_SHARED_LIBS)
             PRIVATE LINKER:--gc-sections
             PRIVATE LINKER:-u,chewing_new
             PRIVATE LINKER:-u,chewing_version
+        )
+        set_target_properties(libchewing PROPERTIES
+            LINK_DEPENDS ${PROJECT_SOURCE_DIR}/capi/src/symbols-elf.map
         )
     endif()
 endif()
