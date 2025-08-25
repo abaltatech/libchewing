@@ -194,7 +194,6 @@ option(ENABLE_JNI "Enable JNI support" OFF)
 set(ALL_SOURCES
     capi/src/chewing.c
     capi/src/chewing-simplified.cpp
-    $<$<BOOL:${ENABLE_JNI}>:capi/src/chewingJNI.cpp>
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})
@@ -267,6 +266,29 @@ else()
         OUTPUT_NAME chewing
         INSTALL_NAME_DIR "@rpath"
     )
+endif()
+
+if(ENABLE_JNI)
+    add_library(chewing_jni SHARED capi/src/chewingJNI.cpp)
+    target_link_libraries(chewing_jni PRIVATE libchewing)
+    target_include_directories(chewing_jni
+        PUBLIC
+            $<BUILD_INTERFACE:${INC_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/chewing>
+    )
+    if(MSVC)
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewingjni
+        )
+    else()
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewing-jni
+            INSTALL_NAME_DIR "@rpath"
+        )
+    endif()
+    install(TARGETS chewing_jni
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${ALL_INC} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/chewing)
