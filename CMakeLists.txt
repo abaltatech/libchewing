@@ -35,6 +35,11 @@ if(UNIX)
     add_compile_definitions(UNDER_POSIX PIC)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Android" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set(CMAKE_SHARED_LINKER_FLAGS
+        "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+endif()
+
 if(MSVC)
     set(CMAKE_C_FLAGS "/utf-8 ${CMAKE_C_FLAGS}")
 endif()
