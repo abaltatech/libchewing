@@ -31,8 +31,6 @@ include(CTest)
 set(CTEST_PARALLEL_LEVEL 1)
 
 if(UNIX)
-    set(CMAKE_SHARED_LINKER_FLAGS
-        "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
     set(CMAKE_C_FLAGS "-g -O2 -Wall -fPIC ${CMAKE_C_FLAGS}")
     add_compile_definitions(UNDER_POSIX PIC)
 endif()
