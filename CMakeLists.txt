@@ -5,14 +5,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-if(APPLE)
-    # macOS linker doesn’t support -z flags, so skip
-elseif(UNIX)
-    # Linux (GNU ld or lld)
-    set(CMAKE_SHARED_LINKER_FLAGS
-        "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
-endif()
-
 set(CMAKE_PROJECT_VERSION 0.9.1)
 
 find_package(Git)
