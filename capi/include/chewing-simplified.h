@@ -11,9 +11,32 @@
 
 #include "chewing.h"
 
+#ifndef CHEWING_EXPORT
+#  if defined(_WIN32) || defined(_WIN64)
+#    if defined(BUILDING_LIBCHEWING)
+#      define CHEWING_EXPORT __declspec(dllexport)
+#    else
+#      define CHEWING_EXPORT __declspec(dllimport)
+#    endif
+#  else
+#    if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4)
+#        define CHEWING_EXPORT __attribute__((visibility("default")))
+#    else
+#        define CHEWING_EXPORT
+#    endif
+#  endif
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** @brief Success return code (from Rust). */
+extern CHEWING_EXPORT const int CHEWING_OK;
+
+/** @brief Error return code (from Rust). */
+extern CHEWING_EXPORT const int CHEWING_ERROR;
 
 static const char CHEWING_KEY_Enter = 10;      // Enter key
 static const char CHEWING_KEY_Space = ' ';     // Space key
@@ -59,11 +82,13 @@ typedef void (*cs_logger_callback_t)(const int level, const char *message);
 
 /** @brief Configuration for CS integration.
  *  @param data_path Filesystem path to chewing data files.
+ *  @param user_path Filesystem path for chewing to use.
  *  @param cand_per_page Number of candidates to fetch per page.
  *  @param max_chi_symbol_len Maximum length of a Chinese symbol sequence.
  */
 typedef struct cs_config_s {
-    char *data_path;
+    const char *data_path;
+    const char *user_path;
     int cand_per_page;
     int max_chi_symbol_len;
 } cs_config_t;
@@ -77,7 +102,7 @@ typedef struct cs_callbacks_s {
     cs_logger_callback_t logger;
 } cs_callbacks_t;
 
-/** @brief Context object holding CS configuration and callbacks. */
+/** @brief Context object holding CS configura tion and callbacks. */
 typedef struct cs_context_s {
     cs_config_t config;
     cs_callbacks_t callbacks;
@@ -87,26 +112,24 @@ typedef struct cs_context_s {
  *  @param ctx Pointer to cs_context_t.
  *  @return true on success, false on failure.
  */
-__attribute__((visibility("default")))
-bool cs_init(const cs_context_t *ctx);
+CHEWING_EXPORT bool cs_init(const cs_context_t *ctx);
 
 /** @brief Terminate CS context and release resources.
  *  @return true on success, false on failure.
  */
-__attribute__((visibility("default")))
-bool cs_terminate(void);
+CHEWING_EXPORT bool cs_terminate(void);
 
-/** @brief Process a single key input through CS.
- *  @param key Input key character.
+/**
+ * @brief Process a single key input through CS and updates state.
+ * @param key Input key character.
+ * @return true if processing succeeded, false otherwise.
  */
-__attribute__((visibility("default")))
-void cs_process_key(const char key);
+CHEWING_EXPORT bool cs_process_key(const char key);
 
 /** @brief Select a candidate from the current list.
  *  @param index Zero-based index of the candidate to select.
  */
-__attribute__((visibility("default")))
-void cs_select_candidate(const int index);
+CHEWING_EXPORT bool cs_select_candidate(const int index);
 
 #ifdef __cplusplus
 }

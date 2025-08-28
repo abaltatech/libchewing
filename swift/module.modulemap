@@ -1,0 +1,6 @@
+framework module libchewing {
+    umbrella header "chewing-simplified.h"
+
+    export *
+    module * { export * }
+}

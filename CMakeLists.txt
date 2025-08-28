@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24.0)
 project(libchewing LANGUAGES C CXX)
-
+ 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
@@ -195,10 +195,11 @@ option(ENABLE_JNI "Enable JNI support" OFF)
 set(ALL_SOURCES
     capi/src/chewing.c
     capi/src/chewing-simplified.cpp
-    $<$<BOOL:${ENABLE_JNI}>:capi/src/chewingJNI.cpp>
 )
 
 add_library(libchewing ${ALL_INC} ${ALL_SOURCES})
+# Define export macro for building the library
+target_compile_definitions(libchewing PRIVATE BUILDING_LIBCHEWING)
 set_target_properties(libchewing PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_definitions(libchewing PRIVATE
     CHEWING_DATADIR=\"${CMAKE_INSTALL_FULL_DATADIR}/libchewing\"
@@ -212,7 +213,10 @@ target_include_directories(libchewing
 corrosion_set_env_vars(chewing_capi
     CHEWING_DATADIR=${CMAKE_INSTALL_FULL_DATADIR}/libchewing
 )
-target_link_libraries(libchewing PRIVATE chewing_capi stdc++)
+target_link_libraries(libchewing PRIVATE chewing_capi)
+if(NOT MSVC)
+  target_link_libraries(libchewing PRIVATE stdc++)
+endif()
 target_link_libraries(chewing_capi INTERFACE ${SQLite3_LIBRARIES})
 
 if(BUILD_SHARED_LIBS)
@@ -263,6 +267,29 @@ else()
         OUTPUT_NAME chewing
         INSTALL_NAME_DIR "@rpath"
     )
+endif()
+
+if(ENABLE_JNI)
+    add_library(chewing_jni SHARED capi/src/chewingJNI.cpp)
+    target_link_libraries(chewing_jni PRIVATE libchewing)
+    target_include_directories(chewing_jni
+        PUBLIC
+            $<BUILD_INTERFACE:${INC_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/chewing>
+    )
+    if(MSVC)
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewingjni
+        )
+    else()
+        set_target_properties(chewing_jni PROPERTIES
+            OUTPUT_NAME chewing-jni
+            INSTALL_NAME_DIR "@rpath"
+        )
+    endif()
+    install(TARGETS chewing_jni
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${ALL_INC} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/chewing)

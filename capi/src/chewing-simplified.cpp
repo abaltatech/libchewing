@@ -111,7 +111,6 @@ static void cs_notify_state_change()
 /**
  * @brief Fetches candidate list from ChewingContext and invokes the candidate
  * info callback.
- * @return Total number of candidates fetched.
  */
 static void cs_fetch_candidates()
 {
@@ -158,60 +157,66 @@ static void cs_fetch_candidates()
 /**
  * @brief Selects a candidate at the specified index and updates state.
  * @param index Zero-based index of the candidate to select.
+ * @return true if selection succeeded, false otherwise.
  */
-void cs_select_candidate(const int index)
+bool cs_select_candidate(const int index)
 {
     if (s_context == nullptr) {
         s_callbacks.log(CHEWING_LOG_ERROR,
                         "cs_select_candidate called with null context");
-        return;
+        return false;
     }
     if (index < 0) {
         std::string msg = "cs_select_candidate called with invalid index " +
                           std::to_string(index);
         s_callbacks.log(CHEWING_LOG_ERROR, msg.c_str());
-        return;
+        return false;
     }
 
     chewing_handle_Down(s_context);
     chewing_cand_Enumerate(s_context);
-    chewing_cand_choose_by_index(s_context, index);
+    int ret = chewing_cand_choose_by_index(s_context, index);
     chewing_handle_Up(s_context);
 
     cs_notify_state_change();
+
+    return ret == CHEWING_OK;
 }
 
 /**
  * @brief Processes a keyboard input through CS and updates state.
  * @param key Input key character.
+ * @return true if processing succeeded, false otherwise.
  */
-void cs_process_key(const char key)
+bool cs_process_key(const char key)
 {
     if (s_context == nullptr) {
         s_callbacks.log(CHEWING_LOG_ERROR,
                         "cs_process_key called with null context");
-        return;
+        return false;
     }
 
+    int ret = CHEWING_ERROR;
     switch (key) {
     case CHEWING_KEY_Enter:
-        chewing_handle_Enter(s_context);
+        ret = chewing_handle_Enter(s_context);
         break;
     case CHEWING_KEY_Space:
-        chewing_handle_Space(s_context);
+        ret = chewing_handle_Space(s_context);
         cs_fetch_candidates();
         break;
     case CHEWING_KEY_Backspace: // Backspace key
-        chewing_handle_Backspace(s_context);
+        ret = chewing_handle_Backspace(s_context);
         cs_fetch_candidates();
         break;
     default:
-        chewing_handle_Default(s_context, key);
+        ret = chewing_handle_Default(s_context, key);
         cs_fetch_candidates();
         break;
     }
 
     cs_notify_state_change();
+    return ret == CHEWING_OK;
 }
 
 /**
@@ -229,6 +234,10 @@ bool cs_init(const cs_context_t *ctx)
     if (data_path == nullptr) {
         return false;
     }
+    const char *user_path = ctx->config.user_path;
+    if (user_path == nullptr) {
+        user_path = data_path; // Use data path if user path is not provided
+    }
 
     if (s_context != nullptr) {
         cs_terminate();
@@ -236,7 +245,7 @@ bool cs_init(const cs_context_t *ctx)
 
     s_callbacks = CallbacksWrapper(ctx->callbacks);
 
-    s_context = chewing_new2(data_path, nullptr, cs_logger_shim, nullptr);
+    s_context = chewing_new2(data_path, user_path, cs_logger_shim, nullptr);
     if (s_context == nullptr) {
         s_callbacks.log(CHEWING_LOG_ERROR,
                         "chewing_new2 failed to initialize context");
