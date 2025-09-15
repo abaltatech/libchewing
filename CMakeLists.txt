@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.24.0)
 project(libchewing LANGUAGES C CXX)
- 
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 set(CMAKE_PROJECT_VERSION 0.9.1)
 
@@ -32,6 +33,11 @@ set(CTEST_PARALLEL_LEVEL 1)
 if(UNIX)
     set(CMAKE_C_FLAGS "-g -O2 -Wall -fPIC ${CMAKE_C_FLAGS}")
     add_compile_definitions(UNDER_POSIX PIC)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Android" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set(CMAKE_SHARED_LINKER_FLAGS
+        "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
 endif()
 
 if(MSVC)

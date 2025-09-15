@@ -22,6 +22,7 @@ set(ALL_TESTTOOLS
     testchewing
 )
 
+
 if(CURSES_FOUND)
     set(ALL_TESTTOOLS ${ALL_TESTTOOLS} genkeystroke)
 endif()
