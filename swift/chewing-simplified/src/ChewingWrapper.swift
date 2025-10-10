@@ -186,7 +186,11 @@ public actor ChewingWrapper {
     /// its SwiftPM `resources:` configuration. This path is used when
     /// initializing the Chewing context.
     public static var dataDirectoryPath: String? {
+        #if SWIFT_PACKAGE
         return Bundle.module.resourcePath
+        #else
+        return Bundle.main.resourcePath
+        #endif
     }
 
     private var ctx: cs_context_s = .init()
