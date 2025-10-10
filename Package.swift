@@ -1,8 +1,8 @@
 // swift-tools-version:5.9
 import PackageDescription
 
-let version = "1.1.1"
-let checksum = "cf8d21a46d48e88527b0702c73c8f36d3f5258463bc96045f55d23342b40a21e"
+let version = "1.1.2"
+let checksum = "4ff58ea2ab26e48bbae2f6f3b18fd48340af024f4a34e194da5aad71c2a57be5"
 
 let package = Package(
     name: "Chewing",
