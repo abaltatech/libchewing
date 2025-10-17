@@ -189,7 +189,12 @@ public actor ChewingWrapper {
         #if SWIFT_PACKAGE
         return Bundle.module.resourcePath
         #else
-        return Bundle.main.resourcePath
+        guard let resourceBundleURL = Bundle(for: ChewingWrapper.self).url(forResource: "ChewingResources",
+                                                                           withExtension: "bundle"),
+              let resourceBundle = Bundle(url: resourceBundleURL)
+        else { return nil }
+
+        return resourceBundle.bundlePath
         #endif
     }
 
